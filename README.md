@@ -1,6 +1,6 @@
 # assignment1
 # CHAT SYSTEM
-# To START SERVER
+#To START SERVER
 First we have to run the chat server, To run the the server we have to use the following command 
 " python filename hostname:port ", the filename is the name of the file  and the hostname:port is the address where we are going to start the server.
 then it will display that the server is running
