@@ -1,83 +1,78 @@
+#!/usr/bin/python
 
+import socket,sys, re
+from threading import Thread
 
-import sys, socket, select
+socketObject = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
-HOST = ''
-SOCKET_LIST = []
+nrArg = len(sys.argv)
+if (nrArg < 2 and nrArg > 3):
+    print ("Wrong Input")
+    print ("please ENTER: python filename hostname:port")
+    sys.exit()
+
+array = sys.argv[1].split(':')
+host = array[0]
+port = int(array[1])
 clients = {}
-RECV_BUFFER = 4096
-PORT = 9009
+clientList = []
+socketObject.bind((host,port))
 
-def chat_server():
+# Function to show the client connection
+# Shows the chatstatus to clients
+def clientAcceptance() :
+    while True :
+        ip,addr = socketObject.accept()
+        print("%s:%s has connected" % addr)
+        ip.send("Welcome to Kiran chat System \n")
+        clientList.append(ip)
+        Thread(target= handlingClients, args=(ip,addr)).start()
 
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server_socket.bind((HOST, PORT))
-    server_socket.listen(100)
+# Function to validate the message size
+# Client connection status
+def handlingClients(ip,addr) :
 
+    length = ip.recv(1024)
+    userName = length.strip("NICK ")
+    if len(userName)<13 and re.match("^[A-Za-z0-9\_]+$",userName) is not None:
+        ip.send("OK \n")
+    else :
+        ip.send(" ERROR: Nickname is not valid \n")
+        name = 'unkwown'
+    msg = "%s has joined the chat \n"% userName
+    broadcast(msg,ip)
+    clients[ip] = userName
 
-    SOCKET_LIST.append(server_socket)
-
-    print "Chat server started on port " + str(PORT)
-
-    while 1:
-
-
-
-        ready_to_read,ready_to_write,in_error = select.select(SOCKET_LIST,[],[],0)
-
-        for sock in ready_to_read:
-
-            if sock == server_socket:
-                sockfd, addr = server_socket.accept()
-                name = sockfd.recv(1024)
-                SOCKET_LIST.append(sockfd)
-                clients[sockfd] = name
-                print "Client (%s, %s) connected" % addr
-
-                broadcast(server_socket, sockfd, " %s entered our chatting room\n" % name)
-
-
+    while True :
+        m = ip.recv(1024).decode('utf-8')
+        msg = m.strip("MSG ")
+        if not msg:
+            ip.close()
+            del clients[ip]
+            left = "%s has left the chat \n"% userName
+            print ("%s:%s has disconnected." % addr)
+            broadcast(left,ip)
+            break
+        else :
+            if len(msg) > 255 and re.match("^[^\x00-\x7F]*$",msg) is None:
+                ip.send("ERROR: Message should be less than 255 characters")
+                msg_snd = "MSG "+userName +" "
             else:
+                msg_snd = "MSG "+userName +" "+ msg
+            broadcast(msg_snd,ip)
 
-                try:
+def broadcast(msg, clientConnection):
+    for i in clientList:
+        if i != socketObject and i != clientConnection :
+            try:
+                i.send(msg.encode('utf-8'))
+            except:
+                pass
 
-                    data = sock.recv(RECV_BUFFER)
-                    if data:
-
-                        broadcast(server_socket, sock, "\r" + '[' + str(name) + '] ' + data)
-                    else:
-
-                        if sock in SOCKET_LIST:
-                            SOCKET_LIST.remove(sock)
-
-
-                        broadcast(server_socket, sock, "Client %s is offline\n" % name)
-
-
-                except:
-                    broadcast(server_socket, sock, "Client %s is offline\n" % name)
-                    continue
-
-    server_socket.close()
-
-
-def broadcast (server_socket, sock, message):
-    for socket in SOCKET_LIST:
-
-        if socket != server_socket and socket != sock :
-            try :
-                socket.send(message)
-            except :
-
-                socket.close()
-
-                if socket in SOCKET_LIST:
-                    SOCKET_LIST.remove(socket)
-
-if __name__ == "__main__":
-
-    sys.exit(chat_server())
-
-
-
+while True:
+    socketObject.listen(100)
+    print("Waiting for clients to connect...")
+    connection = Thread(target=clientAcceptance)
+    connection.start()
+    connection.join()
+    socketObject.close()
