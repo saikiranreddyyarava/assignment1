@@ -7,7 +7,7 @@ socketObject = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 nrArg = len(sys.argv)
 if (nrArg < 3 and nrArg > 4):
     print ("Wrong Input")
-    print ("please ENTER: python filename hostname:port USER")
+    print ("please ENTER: python <FILENAME> localhost:<PORT> <USER>")
     sys.exit()
 
 array = sys.argv[1].split(':')
@@ -17,8 +17,7 @@ user = sys.argv[2]
 socketObject.settimeout(10)
 socketObject.connect((host,port))
 print("Connection established to server")
-nick = 'NICK '+ user
-socketObject.send(nick)
+socketObject.send(user)
 string =''
 
 while True :
@@ -42,7 +41,8 @@ while True :
             string += msg
             fullmsg ='MSG ' + msg
             socketObject.send(fullmsg.encode('utf-8'))
-            sys.stdout.write("You : ")
-            sys.stdout.write(msg)
+            #sys.stdout.write("You : ")
+            #sys.stdout.write(msg)
             sys.stdout.flush()
 socketObject.close()
+            

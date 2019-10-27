@@ -8,15 +8,15 @@ socketObject = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 nrArg = len(sys.argv)
 if (nrArg < 2 and nrArg > 3):
     print ("Wrong Input")
-    print ("please ENTER: python filename hostname:port")
+    print ("please ENTER: python <FILENAME> localhost:<PORT> <USER>")
     sys.exit()
-
-array = sys.argv[1].split(':')
-host = array[0]
-port = int(array[1])
-clients = {}
-clientList = []
-socketObject.bind((host,port))
+else:
+    array = sys.argv[1].split(':')
+    host = array[0]
+    port = int(array[1])
+    clients = {}
+    clientList = []
+    socketObject.bind((host,port))
 
 # Function to show the client connection
 # Shows the chatstatus to clients
@@ -24,7 +24,7 @@ def clientAcceptance() :
     while True :
         ip,addr = socketObject.accept()
         print("%s:%s has connected" % addr)
-        ip.send("Welcome to Kiran chat System \n")
+        ip.send("HELLO 1 \n")
         clientList.append(ip)
         Thread(target= handlingClients, args=(ip,addr)).start()
 
@@ -33,15 +33,17 @@ def clientAcceptance() :
 def handlingClients(ip,addr) :
 
     length = ip.recv(1024)
-    userName = length.strip("NICK ")
-    if len(userName)<13 and re.match("^[A-Za-z0-9\_]+$",userName) is not None:
+    if len(length)<13 and re.match("^[A-Za-z0-9\_]+$",length) is not None:
         ip.send("OK \n")
+        msg = "%s has joined the chat \n"%length
+        broadcast(msg,ip)
+        clients[ip] = length
     else :
-        ip.send(" ERROR: Nickname is not valid \n")
-        name = 'unkwown'
-    msg = "%s has joined the chat \n"% userName
-    broadcast(msg,ip)
-    clients[ip] = userName
+        ip.send("ERROR: Nickname is not valid \n")
+        name = 'unknown'
+        ip.close()
+        #del clients[ip]
+
 
     while True :
         m = ip.recv(1024).decode('utf-8')
@@ -49,21 +51,21 @@ def handlingClients(ip,addr) :
         if not msg:
             ip.close()
             del clients[ip]
-            left = "%s has left the chat \n"% userName
+            left = "%s has left the chat \n"% length
             print ("%s:%s has disconnected." % addr)
             broadcast(left,ip)
             break
         else :
             if len(msg) > 255 and re.match("^[^\x00-\x7F]*$",msg) is None:
-                ip.send("ERROR: Message should be less than 255 characters")
-                msg_snd = "MSG "+userName +" "
+                ip.send("ERROR: Message should be less than 255 characters \n")
+                msg_snd = "MSG "+length +" "
             else:
-                msg_snd = "MSG "+userName +" "+ msg
+                msg_snd = "MSG "+length +" "+ msg
             broadcast(msg_snd,ip)
 
 def broadcast(msg, clientConnection):
     for i in clientList:
-        if i != socketObject and i != clientConnection :
+        if (i != socketObject) and (i != clientConnection) :
             try:
                 i.send(msg.encode('utf-8'))
             except:
