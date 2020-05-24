@@ -1,48 +1,53 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
-import socket,sys,select,string
+import sys, socket, select
 
-socketObject = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+def chat_client():
+    if(len(sys.argv) < 3) :
+        print("Usage : ./chat_client.py hostname port")
+        sys.exit()
 
-nrArg = len(sys.argv)
-if (nrArg < 3 and nrArg > 4):
-    print ("Wrong Input")
-    print ("please ENTER: python <FILENAME> localhost:<PORT> <USER>")
-    sys.exit()
+    host = sys.argv[1]
+    port = int(sys.argv[2])
 
-array = sys.argv[1].split(':')
-host = array[0]
-port = int(array[1])
-user = sys.argv[2]
-socketObject.settimeout(10)
-socketObject.connect((host,port))
-print("Connection established to server")
-socketObject.send(user)
-string =''
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(2)
 
-while True :
-    sockList = [sys.stdin,socketObject]
-    readList,writeList,errorList = select.select(sockList,[], [])
-    for i in readList:
-        if i == socketObject:
-            rcvdMsg = i.recv(1024)
-            if not rcvdMsg:
-                print("DISCONNECTED")
-                sys.exit()
-            else:
-                if rcvdMsg != 'MSG '+user+' '+string :
-                    sys.stdout.write(rcvdMsg.strip('MSG '))
-                    sys.stdout.flush()
-                else:
-                    continue
-        else:
-            string = ''
-            msg = sys.stdin.readline()
-            string += msg
-            fullmsg ='MSG ' + msg
-            socketObject.send(fullmsg.encode('utf-8'))
-            #sys.stdout.write("You : ")
-            #sys.stdout.write(msg)
-            sys.stdout.flush()
-socketObject.close()
-            
+    # connect to remote host
+    try :
+        s.connect((host, port))
+    except :
+        print("Unable to connect")
+        sys.exit()
+
+    print("Connected to remote host. You can start sending messages")
+    sys.stdout.write('[Me] '); sys.stdout.flush()
+
+    while 1:
+        socket_list = [sys.stdin, s]
+
+        # Get the list sockets which are readable
+        read_sockets, write_sockets, error_sockets = select.select(socket_list , [], [])
+
+        for sock in read_sockets:
+            if sock == s:
+                # incoming message from remote server, s
+                data = sock.recv(4096)
+                # print("\ndebug: incoming msg from remote server {}".format(data))
+                if not data :
+                    print("\nDisconnected from chat server")
+                    sys.exit()
+                else :
+                    #print data
+                    sys.stdout.write(data.decode())
+                    sys.stdout.write('[Me] '); sys.stdout.flush()
+
+            else :
+                # user entered a message
+                msg = sys.stdin.readline()
+                # print("debug: {}".format(msg))
+                s.send(msg.encode())
+                sys.stdout.write('[Me] '); sys.stdout.flush()
+
+if __name__ == "__main__":
+    sys.exit(chat_client())
