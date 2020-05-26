@@ -20,8 +20,8 @@ def chat_client():
         print("Unable to connect")
         sys.exit()
 
-    print("Connected to remote host. You can start sending messages")
-    sys.stdout.write('[Me] '); sys.stdout.flush()
+    # print("Connected to remote host. You can start sending messages")
+    # sys.stdout.write('[Me] '); sys.stdout.flush()
 
     while 1:
         socket_list = [sys.stdin, s]
