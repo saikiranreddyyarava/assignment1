@@ -5,12 +5,11 @@ import sys, socket, select
 def chat_client():
     NICKNAME = ""
     if(len(sys.argv) < 2) :
-        print("Usage : ./chat_client.py hostname:port [nickname]")
+        print("Usage : ./chatclient.py hostname:port [nickname]")
         sys.exit()
 
     if len(sys.argv) > 2:
         NICKNAME = str(sys.argv[2])
-        print("debug: {} {}".format(sys.argv[1], NICKNAME))
 
     host_addr = sys.argv[1].split(':')
     host = host_addr[0]
@@ -27,10 +26,7 @@ def chat_client():
         print("Unable to connect")
         sys.exit()
 
-    # print("Connected to remote host. You can start sending messages")
-    # sys.stdout.write('[Me] '); sys.stdout.flush()
     if NICKNAME != "":
-        print("debug: setting nickname")
         s.sendall("NICK {}\n".format(NICKNAME).encode())
 
     while 1:
@@ -43,19 +39,16 @@ def chat_client():
             if sock == s:
                 # incoming message from remote server, s
                 data = sock.recv(4096)
-                # print("\ndebug: incoming msg from remote server {}".format(data))
                 if not data :
                     print("\nDisconnected from chat server")
                     sys.exit()
-                else :
-                    #print data
+                else :                    
                     sys.stdout.write(data.decode())
                     sys.stdout.write('[Me] '); sys.stdout.flush()
 
             else :
                 # user entered a message
                 msg = sys.stdin.readline()
-                # print("debug: {}".format(msg))
                 s.send(msg.encode())
                 sys.stdout.write('[Me] '); sys.stdout.flush()
 

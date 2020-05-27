@@ -23,7 +23,6 @@ def chat_server():
     while 1:
 
         # get the list sockets which are ready to be read through select
-        # 4th arg, time_out  = 0 : poll and never block
         ready_to_read,ready_to_write,in_error = select.select(SOCKET_LIST,[],[],0)
 
         for sock in ready_to_read:
@@ -42,7 +41,6 @@ def chat_server():
                 try:
                     # receiving data from the socket.
                     data = sock.recv(RECV_BUFFER).decode()
-                    # print("\ndebug: len of msg from client {}".format(len(data.strip())))
                     if data:
                         if len(data) > 255:
                             sock.send(b"\n[server] ERROR the message cannot be more than 255 characters\n")
@@ -50,7 +48,6 @@ def chat_server():
                         if data == "\n":
                             continue
                         cmd = data.strip("\n").split(" ")
-                        # print("debug: {}".format(cmd))
                         if "NICK" in cmd and cmd[0] != "NICK":
                             sock.send(b"\n[server] ERROR malformed command\n")
                             continue
@@ -68,10 +65,9 @@ def chat_server():
                             nick_keys = NICK_LIST.keys()
                             nick_values = NICK_LIST.values()
                             nick = list(NICK_LIST.keys())[list(NICK_LIST.values()).index(sock)]
-                            broadcast(server_socket, sock, "\r" + '[server] ' + '[' + str(nick) + '] ' + data)
+                            broadcast(server_socket, sock, "\r" + '[' + str(nick) + '] ' + data)
 
                         # there is something in the socket
-                        # broadcast(server_socket, sock, "\r" + '[server] ' + '[' + str(sock.getpeername()) + '] ' + data)
                     else:
                         # remove the socket that's broken
                         if sock in SOCKET_LIST:
@@ -94,13 +90,10 @@ def chat_server():
 
 # broadcast chat messages to all connected clients
 def broadcast(server_socket, sock, message):
-    # print("debug: broadcasting messages......")
-    # print("debug: socket_list: {}".format(SOCKET_LIST))
     for socket in SOCKET_LIST:
-        # print("debug: \nsocket: {}\nserver_socket: {}\nsock: {}\nmsg: {}".format(socket,server_socket,sock,message))
+
         # send the message only to peer
         if socket != server_socket and socket != sock:
-            # print("debug: broadcast  {}".format(message))
             try:
                 socket.send(message.encode())
             except :
@@ -109,12 +102,11 @@ def broadcast(server_socket, sock, message):
                 # broken socket, remove it
                 if socket in SOCKET_LIST:
                     SOCKET_LIST.remove(socket)
-    # print("debug: broadcast complete. {} ---- {}".format(len(SOCKET_LIST),SOCKET_LIST))
 
 if __name__ == "__main__":
     N = len(sys.argv)
     if N < 2:
-        print ("USAGE: ./chatserver <IP>:<PORT>")
+        print ("USAGE: ./chatserver.py <IP>:<PORT>")
         sys.exit()
     host = sys.argv[1].split(':')
     HOST = host[0]
