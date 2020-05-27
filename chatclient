@@ -5,7 +5,7 @@ import sys, socket, select
 def chat_client():
     NICKNAME = ""
     if(len(sys.argv) < 2) :
-        print("Usage : ./chatclient.py hostname:port [nickname]")
+        print("Usage : ./chatclient hostname:port [nickname]")
         sys.exit()
 
     if len(sys.argv) > 2:

@@ -106,7 +106,7 @@ def broadcast(server_socket, sock, message):
 if __name__ == "__main__":
     N = len(sys.argv)
     if N < 2:
-        print ("USAGE: ./chatserver.py <IP>:<PORT>")
+        print ("USAGE: ./chatserver <IP>:<PORT>")
         sys.exit()
     host = sys.argv[1].split(':')
     HOST = host[0]
