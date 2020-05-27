@@ -3,12 +3,19 @@
 import sys, socket, select
 
 def chat_client():
-    if(len(sys.argv) < 3) :
-        print("Usage : ./chat_client.py hostname port")
+    NICKNAME = ""
+    if(len(sys.argv) < 2) :
+        print("Usage : ./chat_client.py hostname:port [nickname]")
         sys.exit()
 
-    host = sys.argv[1]
-    port = int(sys.argv[2])
+    if len(sys.argv) > 2:
+        NICKNAME = str(sys.argv[2])
+        print("debug: {} {}".format(sys.argv[1], NICKNAME))
+
+    host_addr = sys.argv[1].split(':')
+    host = host_addr[0]
+    port = int(host_addr[1])
+
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(2)
@@ -22,6 +29,9 @@ def chat_client():
 
     # print("Connected to remote host. You can start sending messages")
     # sys.stdout.write('[Me] '); sys.stdout.flush()
+    if NICKNAME != "":
+        print("debug: setting nickname")
+        s.sendall("NICK {}\n".format(NICKNAME).encode())
 
     while 1:
         socket_list = [sys.stdin, s]

@@ -60,8 +60,7 @@ def chat_server():
                                 sock.send(b"\n[server] OK\n")
                                 continue
                             else:
-                                sock.send(b"\n[server] ERROR nickname is limited to 12 characters and cannot have \
-                                                special characters\n")
+                                sock.send(b"\n[server] ERROR nickname is limited to 12 characters and cannot have special characters\n")
                                 continue
                         if sock not in NICK_LIST.values():
                             sock.send(b"\n[server] ERROR no nick set\n")
