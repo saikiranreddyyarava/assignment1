@@ -48,23 +48,27 @@ def chat_server():
                             continue
                         cmd = data.strip("\n").split(" ")
                         if "NICK" in cmd and cmd[0] != "NICK":
-                            sock.send(b"\n[server] ERROR malformed command\n")
+                            sock.send(b"\nERROR malformed command\n")
                             continue
                         if "NICK" in cmd and cmd[0]=="NICK" and len(cmd)>1:
                             if len(cmd[1]) < 13 and re.match("^[A-Za-z0-9\_]+$", cmd[1]) is not None:
                                 NICK_LIST[cmd[1]] = sock
-                                sock.send(b"\n[server] OK\n")
+                                sock.send(b"OK\n")
                                 continue
                             else:
-                                sock.send(b"\n[server] ERROR nickname is limited to 12 characters and cannot have special characters\n")
+                                sock.send(b"\nERROR nickname is limited to 12 characters and cannot have special characters\n")
                                 continue
                         if sock not in NICK_LIST.values():
-                            sock.send(b"\n[server] ERROR no nick set\n")
+                            sock.send(b"ERROR no nick set\n")
+                            continue
+                        elif 'MSG ' not in data:
+                            sock.sendall('ERROR malformed message'.encode())
+                            continue
                         else:
                             nick_keys = NICK_LIST.keys()
                             nick_values = NICK_LIST.values()
                             nick = list(NICK_LIST.keys())[list(NICK_LIST.values()).index(sock)]
-                            broadcast(server_socket, sock, "\r" + '[' + str(nick) + '] ' + data)
+                            broadcast(server_socket, sock, "\r" + str(nick) + ' ' + data)
 
                         # there is something in the socket
                     else:

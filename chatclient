@@ -28,7 +28,7 @@ def chat_client():
 
     if NICKNAME != "":
         s.sendall("NICK {}\n".format(NICKNAME).encode())
-
+    
     while 1:
         socket_list = [sys.stdin, s]
 
@@ -44,13 +44,15 @@ def chat_client():
                     sys.exit()
                 else :                    
                     sys.stdout.write(data.decode())
-                    sys.stdout.write('[Me] '); sys.stdout.flush()
+                    sys.stdout.write(''); sys.stdout.flush()
 
             else :
-                # user entered a message
+                # user entered a message 
                 msg = sys.stdin.readline()
+                if "NICK " not in msg:
+                    msg = "MSG " + msg
                 s.send(msg.encode())
-                sys.stdout.write('[Me] '); sys.stdout.flush()
+                sys.stdout.write(''); sys.stdout.flush()
 
 if __name__ == "__main__":
     sys.exit(chat_client())
